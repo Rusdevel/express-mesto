@@ -8,12 +8,18 @@ const getUsersInfo = (req, res) => User.find({})
     console.log(err);
   });
 
-const getUserId = (req, res) => User.findById(req.params.id)
+const getUserId = (req, res) => User.findById(req.params.userId)
   .then((user) => {
     res.status(200).send(user);
   })
   .catch((err) => {
-    console.log(err);
+    if (err.name === 'CastError') {
+      res.status(400).send({
+        message: 'Переданы некорректные данные',
+      });
+    } else {
+      res.status(404).send({ message: 'Пользователь с указанным _id не найден' });
+    }
   });
 
 const createUser = (req, res) => {
@@ -21,7 +27,13 @@ const createUser = (req, res) => {
   return User.create({ name, about, avatar })
     .then((user) => { res.send(user); })
     .catch((err) => {
-      console.log(err);
+      if (err.name === 'ValidationError') {
+        res.status(400).send({
+          message: 'Переданы некорректные данные',
+        });
+      } else {
+        res.status(500).send({ message: err.message });
+      }
     });
 };
 
@@ -31,7 +43,15 @@ const updateAvatar = (req, res) => {
   return User.findByIdAndUpdate(userId, { avatar }, { new: true, runValidators: true })
     .then((user) => { res.status(200).send(user); })
     .catch((err) => {
-      console.log(err);
+      if (err.name === 'ValidationError') {
+        res.status(400).send({
+          message: 'Переданы некорректные данные',
+        });
+      } else if (err.name === 'NotFound') {
+        res.status(404).send({ message: 'Пользователь с указанным _id не найден' });
+      } else {
+        res.status(500).send({ message: err.message });
+      }
     });
 };
 
@@ -41,7 +61,13 @@ const updateUser = (req, res) => {
   return User.findByIdAndUpdate(userId, { name, about }, { new: true, runValidators: true })
     .then((user) => { res.status(200).send(user); })
     .catch((err) => {
-      console.log(err);
+      if (err.name === 'NotFound') {
+        res.status(404).send({
+          message: 'Пользователь с указанным _id не найден',
+        });
+      } else {
+        console.log(err);
+      }
     });
 };
 

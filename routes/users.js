@@ -8,6 +8,6 @@ const {
 router.get('/users', getUsersInfo);
 router.get('/users/:userId', getUserId);
 router.post('/users', createUser);
-router.patch('/me/avatar', updateAvatar);
-router.patch('/me', updateUser);
+router.patch('/users/me/avatar', updateAvatar);
+router.patch('/users/me', updateUser);
 module.exports = router;
