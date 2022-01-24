@@ -17,8 +17,10 @@ const getUserId = (req, res) => User.findById(req.params.userId)
       res.status(400).send({
         message: 'Переданы некорректные данные',
       });
-    } else {
+    } else if (err.name === 'NotFound') {
       res.status(404).send({ message: 'Пользователь с указанным _id не найден' });
+    } else {
+      res.status(500).send({ message: err.message });
     }
   });
 
@@ -66,7 +68,7 @@ const updateUser = (req, res) => {
           message: 'Пользователь с указанным _id не найден',
         });
       } else {
-        console.log(err);
+        res.status(500).send({ message: err.message });
       }
     });
 };
