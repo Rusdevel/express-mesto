@@ -9,6 +9,7 @@ const getUsersInfo = (req, res) => User.find({})
   });
 
 const getUserId = (req, res) => User.findById(req.params.userId)
+  .orFail(new Error('NotFound'))
   .then((user) => {
     res.status(200).send(user);
   })
@@ -43,6 +44,7 @@ const updateAvatar = (req, res) => {
   const userId = req.user._id;
   const { avatar } = req.body;
   return User.findByIdAndUpdate(userId, { avatar }, { new: true, runValidators: true })
+    .orFail(new Error('NotFound'))
     .then((user) => { res.status(200).send(user); })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -61,6 +63,7 @@ const updateUser = (req, res) => {
   const userId = req.user._id;
   const { name, about } = req.body;
   return User.findByIdAndUpdate(userId, { name, about }, { new: true, runValidators: true })
+    .orFail(new Error('NotFound'))
     .then((user) => { res.status(200).send(user); })
     .catch((err) => {
       if (err.name === 'NotFound') {
