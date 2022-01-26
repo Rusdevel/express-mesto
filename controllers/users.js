@@ -13,12 +13,12 @@ const getUserId = (req, res) => User.findById(req.params.userId)
   .then((user) => {
     res.status(200).send(user);
   })
+  // eslint-disable-next-line consistent-return
   .catch((err) => {
     if (err.name === 'CastError') {
-      res.status(400).send({
-        message: 'Переданы некорректные данные',
-      });
-    } else if (err.name === 'NotFound') {
+      return res.status(400).send({ message: 'Переданны некоректные данные' });
+    }
+    if (err.message === 'NotFound') {
       res.status(404).send({ message: 'Пользователь с указанным _id не найден' });
     } else {
       res.status(500).send({ message: err.message });
@@ -46,12 +46,12 @@ const updateAvatar = (req, res) => {
   return User.findByIdAndUpdate(userId, { avatar }, { new: true, runValidators: true })
     .orFail(new Error('NotFound'))
     .then((user) => { res.status(200).send(user); })
+    // eslint-disable-next-line consistent-return
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({
-          message: 'Переданы некорректные данные',
-        });
-      } else if (err.name === 'NotFound') {
+      if (err.name === 'CastError') {
+        return res.status(400).send({ message: 'Переданны некоректные данные' });
+      }
+      if (err.message === 'NotFound') {
         res.status(404).send({ message: 'Пользователь с указанным _id не найден' });
       } else {
         res.status(500).send({ message: err.message });
@@ -65,11 +65,13 @@ const updateUser = (req, res) => {
   return User.findByIdAndUpdate(userId, { name, about }, { new: true, runValidators: true })
     .orFail(new Error('NotFound'))
     .then((user) => { res.status(200).send(user); })
+    // eslint-disable-next-line consistent-return
     .catch((err) => {
-      if (err.name === 'NotFound') {
-        res.status(404).send({
-          message: 'Пользователь с указанным _id не найден',
-        });
+      if (err.name === 'CastError') {
+        return res.status(400).send({ message: 'Переданны некоректные данные' });
+      }
+      if (err.message === 'NotFound') {
+        res.status(404).send({ message: 'Пользователь с указанным _id не найден' });
       } else {
         res.status(500).send({ message: err.message });
       }
