@@ -65,7 +65,7 @@ const createUser = (req, res, next) => {
         next(new RequestError('Некорректные данные'));
       } else if (err.name === 'MongoError' && err.code === 11000) {
         next(new ConflictEmailError('Указанный пользователь уже зарегистрирован'));
-      }
+      } else { next(err); }
     })
     .catch(next);
 };
