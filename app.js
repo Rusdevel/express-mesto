@@ -1,29 +1,56 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
 // const path = require('path');
 const bodyParser = require('body-parser');
+const { errors, celebrate, Joi } = require('celebrate');
+const { createUser, login } = require('./controllers/users');
 const usersRoute = require('./routes/users');
 const cardsRoute = require('./routes/cards');
+const NotFoundError = require('./errors/NotFoundError');
+
+const auth = require('./middlewares/auth');
 
 // Слушаем 3000 порт
 const { PORT = 3000 } = process.env;
 const app = express();
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '61e4906685129e50e1d4e994', // вставьте сюда _id созданного в предыдущем пункте пользователя
-  };
-
-  next();
-});
-
 // подключаемся к серверу mongo
 mongoose.connect('mongodb://localhost:27017/mestodb');
 app.use(bodyParser.json());
+app.use(cookieParser());
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required(),
+  }),
+}), login);
+
+app.post('/signup', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(4),
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string().regex(/^(https?:\/\/)?([\da-z\\.-]+)\.([a-z\\.]{2,6})([/\w \\.-]*)*\/?$/),
+  }),
+}), createUser);
+// авторизация
+app.use(auth);
+
 app.use('/', usersRoute);
 app.use('/', cardsRoute);
-app.use('*', (req, res) => {
-  res.status(404).send({ message: 'ресурс не найден.' });
+app.all('*', (req, res, next) => {
+  next(new NotFoundError('ресурс не найден.'));
+});
+
+app.use(errors());
+
+// мидлвэр обработчика ошибки
+app.use((err, req, res, next) => {
+  const { statusCode = 500, message } = err;
+  res.status(statusCode).send({ message: statusCode === 500 ? 'На сервере произошла ошибка' : message });
+  next();
 });
 
 app.listen(PORT, () => {
